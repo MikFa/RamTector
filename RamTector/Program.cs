@@ -31,6 +31,22 @@ namespace RamTector
     {        
         static void Main(string[] args)
         {
+            //var counter = new PerformanceCounter();
+            //counter.CategoryName = "Process";
+            //counter.CounterName = "Working Set - Private";
+            //var processes = Process.GetProcessesByName("chrome");
+            //for (int i = 0; i < processes.Length - 1; i++)
+            //{
+            //    counter.InstanceName = processes[i].ProcessName;                
+            //    Console.WriteLine("{1} {0}K", counter.RawValue / 1024, counter.InstanceName);
+            //}
+            //counter.InstanceName = "chrome";
+            //Console.WriteLine("{1} {0}K", counter.RawValue / 1024, counter.InstanceName);
+
+            //counter.InstanceName = "chrome#1";
+            //Console.WriteLine("{1} {0}K", counter.RawValue / 1024, counter.InstanceName);
+            //Console.ReadLine();
+
             ProgramManager pm = new ProgramManager();
             pm.MainLoop();
         }

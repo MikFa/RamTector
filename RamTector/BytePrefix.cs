@@ -8,18 +8,20 @@ namespace RamTector
 {
     public class Memory
     {
-        public Memory(decimal memValue, BytePrefix prefix)
+        public Memory(long memValue, BytePrefix prefix)
         {
             this.MemValue = memValue;
             this.Prefix = prefix;            
         }
-        public decimal MemValue { get; private set; }
+        public Memory(){}
+
+        public long MemValue { get; private set; }
         public BytePrefix Prefix { get; private set; }
 
         public void ConvertPrefix(BytePrefix targetPrefix)
         {
             var conversion =  (double)this.Prefix - (double)targetPrefix;
-            this.MemValue = this.MemValue * (decimal)Math.Pow(10, conversion);
+            this.MemValue = this.MemValue * (long)Math.Pow(10, conversion);
             this.Prefix = targetPrefix;
         }
 
@@ -28,7 +30,7 @@ namespace RamTector
             return $"{this.MemValue} {this.Prefix}";
         }
 
-        public void SetNewMemoryValue(decimal memValue, BytePrefix prefix)
+        public void SetNewMemoryValue(long memValue, BytePrefix prefix)
         {
             this.MemValue = memValue;
             this.Prefix = prefix;

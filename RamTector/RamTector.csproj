@@ -48,11 +48,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BytePrefix.cs" />
+    <Compile Include="IProcessGroup.cs" />
     <Compile Include="ProcessCalculator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StatusUtil.cs" />
+    <Compile Include="WatchedProcess.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

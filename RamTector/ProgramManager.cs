@@ -10,30 +10,31 @@ namespace RamTector
     class ProgramManager
     {
         ProcessCalculator processCalc;
-        bool showCpu = false;
+        bool showCpu = true;
         public ProgramManager()
         {
             processCalc = new ProcessCalculator();
             processCalc.RefreshTime = new TimeSpan(0, 0, 0, 2, 0);
-            processCalc.AddProcess("Skype", true);
-            processCalc.AddProcess("ramtector");
-            processCalc.AddProcess("steam");
-            processCalc.AddProcess("Firefox");
-            processCalc.AddProcess("Notepad");
-            processCalc.AddProcess("Microsoft.StickyNotes");
-            processCalc.AddProcess("Calculator");
-            processCalc.AddProcess("MSIAfterBurner");
-            processCalc.AddProcess("Taskmgr");
-            processCalc.AddProcess("Ressource Monitor");
-            processCalc.AddProcess("powershell");
-            processCalc.AddProcess("skype");
-            processCalc.AddProcess("Windows Explorer");
-            processCalc.AddProcess("texstudio");
-            processCalc.AddProcess("Discord");
-            processCalc.AddProcess("devenv");
-            processCalc.AddProcess("TeamViewer");
-            processCalc.AddProcess("Chrome");
-            processCalc.AddProcess("EthDcrMiner64");
+            //processCalc.AddProcess("Chrome");
+            //processCalc.AddProcess("Skype", true); // Fix if you added something that is not there so that if it is there then it will be there and if you close a application it no crash
+            //processCalc.AddProcess("ramtector");
+            //processCalc.AddProcess("steam");
+            //processCalc.AddProcess("Firefox");
+            //processCalc.AddProcess("Notepad");
+            //processCalc.AddProcess("Microsoft.StickyNotes");
+            //processCalc.AddProcess("Calculator");
+            //processCalc.AddProcess("MSIAfterBurner");
+            //processCalc.AddProcess("Taskmgr");
+            //processCalc.AddProcess("Ressource Monitor");
+            //processCalc.AddProcess("powershell");
+            //processCalc.AddProcess("skype");
+            //processCalc.AddProcess("Windows Explorer");
+            //processCalc.AddProcess("texstudio");
+            //processCalc.AddProcess("Discord");
+            //processCalc.AddProcess("devenv");
+            //processCalc.AddProcess("TeamViewer");
+            //processCalc.AddProcess("EthDcrMiner64");
+            //processCalc.AddProcess("SpaceEngineers");
         }
 
         public void MainLoop()

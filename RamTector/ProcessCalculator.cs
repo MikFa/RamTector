@@ -15,16 +15,21 @@ namespace RamTector
         public event UpdateHandler Update;
         public delegate void UpdateHandler(object sender, EventArgs e);
         //private Stopwatch cpuWatch;
-        private decimal totalCpuUtilization;
-        private TimeSpan totalCpuTime;
+        private long totalCpuUtilization;
+        //private TimeSpan totalCpuTime;
+        //private PerformanceCounter ramCounter;
+        //private PerformanceCounter cpuCounter;
+        private PerformanceCounter totalCpuCounter;
         #endregion
 
         public ProcessCalculator()
         {
             WatchedProcesses = new Dictionary<string, WachtedProcess>();
             TotalCpuUtilization = 0;
-            totalCpuTime = new TimeSpan();
             refreshTime = new TimeSpan(0, 0, 0, 0, 1000);
+
+
+            totalCpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
         }
 
         #region properties
@@ -32,7 +37,7 @@ namespace RamTector
 
         public TimeSpan RefreshTime { get { return refreshTime; } set { refreshTime = value; } }
 
-        public decimal TotalCpuUtilization { get => totalCpuUtilization; set => totalCpuUtilization = value; }
+        public long TotalCpuUtilization { get => totalCpuUtilization; set => totalCpuUtilization = value; }
 
         public TimeSpan previousTotalCpuTime { get; private set; }
         #endregion
@@ -41,7 +46,7 @@ namespace RamTector
         public bool UpdateWatchedProcesses()
         {
             var processes = Process.GetProcesses();
-            UpdateTotalCpu(processes);
+            UpdateTotalCpu();
             foreach (var watchedProcess in WatchedProcesses)
             {
                 Process[] newProcess = watchedProcess.Value.Grouped ? processes.Where(c => c.ProcessName.ToLower().Contains(watchedProcess.Key.ToLower())).ToArray() : processes.Where(c => c.ProcessName.ToLower() == watchedProcess.Key.ToLower()).ToArray();
@@ -56,76 +61,94 @@ namespace RamTector
         {
             PassedValue pV = (PassedValue)a;
             pV.p.Memory.SetNewMemoryValue(CalculateProcessRam(pV.ps));
-            pV.p.CalculateApplicationCPUTime(pV.ps, this.RefreshTime);
+            pV.p.CpuProcessPercent = CalculateProcessCpuTime(pV.ps);
         }
 
         public StatusCode AddProcess(string applicationName, bool group = false)
         {
             var processes = group ? Process.GetProcesses().Where(c => c.ProcessName.ToLower().Contains(applicationName.ToLower())).ToArray() : Process.GetProcessesByName(applicationName);
-            if (processes.Length < 0)
+            if (processes.Length <= 0)
             {
                 return StatusCode.UnableToFindProcess;
             }
-            var processArray = Process.GetProcessesByName(applicationName);
 
             if (WatchedProcesses.ContainsKey(applicationName)) { return StatusCode.AlreadyExsists; }
 
-            WatchedProcesses.Add(applicationName, new WachtedProcess(CalculateProcessRam(processArray), CalculateProcessCpuTime(processArray), group, processes.Count()));
+            WatchedProcesses.Add(applicationName, new WachtedProcess(CalculateProcessRam(processes), CalculateProcessCpuTime(processes), group, processes.Count()));
 
             return StatusCode.Success;
         }
 
         private Memory CalculateProcessRam(Process[] processes)
         {
+            Memory m = new Memory();
             try
             {
-                decimal totalRam = 0;
-                foreach (var item in processes)
+                var ramCounter = new PerformanceCounter();
+                ramCounter.CategoryName = "Process";
+                ramCounter.CounterName = "Working Set - Private";
+                long totalRam = 0;
+                if (processes.Length > 1)
                 {
-                    totalRam += item.VirtualMemorySize64 ;
+                    foreach (var item in processes)
+                    {
+                        ramCounter.InstanceName = item.ProcessName;
+                        totalRam += ramCounter.RawValue;
+                    }
                 }
-                Memory m = new Memory(totalRam, BytePrefix.Byte);
-                m.ConvertPrefix(BytePrefix.KiloBytes);
-                return m;
+                else
+                {
+                    ramCounter.InstanceName = processes[0].ProcessName;
+                    totalRam = ramCounter.RawValue;
+                }
+                m = new Memory(totalRam, BytePrefix.Byte);
+                //m.ConvertPrefix(BytePrefix.KiloBytes);
             }
+            catch (System.ComponentModel.Win32Exception e) { }
             catch (Exception e) { throw e; }
+            return m;
         }
 
-        private TimeSpan CalculateProcessCpuTime(Process[] processes)
+        private long CalculateProcessCpuTime(Process[] processes)
         {
-            TimeSpan totalProcessCpuTime = new TimeSpan();
+            long totalCpu = 0;
             try
             {
-                foreach (var item in processes)
+                var cpuCounter = new PerformanceCounter();
+                cpuCounter.CategoryName = "Process";
+                cpuCounter.CounterName = "% Processor Time";
+                if (processes.Length > 1)
                 {
-                    totalProcessCpuTime = totalProcessCpuTime.Add(item.TotalProcessorTime);
+                    foreach (var item in processes)
+                    {
+                        cpuCounter.InstanceName = item.ProcessName;
+                        totalCpu += cpuCounter.RawValue;
+                    }
+                }
+                else
+                {
+                    cpuCounter.InstanceName = processes[0].ProcessName;
+                    totalCpu = cpuCounter.RawValue;
                 }
             }
             catch (System.ComponentModel.Win32Exception) { }
             catch (Exception e) { throw e; }
 
-            return totalProcessCpuTime;
+            return totalCpu;
         }
 
-        private void UpdateTotalCpu(Process[] processes)
+        private void UpdateTotalCpu()
         {
-            TimeSpan val = new TimeSpan();
             try
             {
-                foreach (Process p in processes)
-                {
-                    val = val.Add(p.TotalProcessorTime);
-                }
+                this.TotalCpuUtilization = totalCpuCounter.RawValue;
             }
             catch (System.ComponentModel.Win32Exception e) { }
             catch (Exception) { throw; }
-            TotalCpuUtilization = (decimal)((val.TotalMilliseconds - previousTotalCpuTime.TotalMilliseconds) / this.RefreshTime.TotalMilliseconds) * 100;
-            previousTotalCpuTime = totalCpuTime;
-            totalCpuTime = val;            
         }
         #endregion
     }
-    
+
     public struct PassedValue
     {
         public WachtedProcess p { get; private set; }
@@ -139,45 +162,5 @@ namespace RamTector
 
     }
 
-    public class WachtedProcess
-    {
-        public Memory Memory { get; set; }
-        public TimeSpan cpuTime { get; set; }
-        public decimal CpuPercent { get; set; }
-        public bool Grouped { get; private set; }
-        public int GroupCount { get; private set; }
 
-        public WachtedProcess(Memory memory, TimeSpan cpuTime, decimal cpuPercent = 0)
-        {
-            this.Memory = memory;
-            this.cpuTime = cpuTime;
-            this.CpuPercent = 0;
-        }
-        public WachtedProcess(Memory memory, TimeSpan cpuTime, bool grouped, int groupCount)
-        {
-            this.Memory = memory;
-            this.cpuTime = cpuTime;
-            this.CpuPercent = 0;
-            this.Grouped = grouped;
-            this.GroupCount = groupCount;
-        }
-
-        public void CalculateApplicationCPUTime(Process[] processes, TimeSpan refreshTime)
-        {
-            TimeSpan newAppCpuTime = new TimeSpan();
-            try
-            {
-                foreach (var item in processes)
-                {
-                    newAppCpuTime = newAppCpuTime.Add(item.UserProcessorTime);
-                }
-            }
-            catch (System.ComponentModel.Win32Exception) { }
-            catch (Exception e) { throw e; }
-
-            this.CpuPercent = ((decimal)(newAppCpuTime.TotalMilliseconds - this.cpuTime.TotalMilliseconds) / (decimal)refreshTime.TotalMilliseconds) * 100;
-            cpuTime = newAppCpuTime;
-        }
-
-    }
 }

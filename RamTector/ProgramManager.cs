@@ -10,17 +10,17 @@ namespace RamTector
     class ProgramManager
     {
         ProcessCalculator processCalc;
-        bool showCpu = true;
+        bool _showCpu = true;
         public ProgramManager()
         {
             processCalc = new ProcessCalculator();
             processCalc.RefreshTime = new TimeSpan(0, 0, 0, 2, 0);
-            //processCalc.AddProcess("Chrome");
+            processCalc.AddProcess("Chrome");
             //processCalc.AddProcess("Skype", true); // Fix if you added something that is not there so that if it is there then it will be there and if you close a application it no crash
             //processCalc.AddProcess("ramtector");
             //processCalc.AddProcess("steam");
             //processCalc.AddProcess("Firefox");
-            //processCalc.AddProcess("Notepad");
+            processCalc.AddProcess("Notepad");
             //processCalc.AddProcess("Microsoft.StickyNotes");
             //processCalc.AddProcess("Calculator");
             //processCalc.AddProcess("MSIAfterBurner");
@@ -41,20 +41,23 @@ namespace RamTector
         {
             while (true)
             {
-                processCalc.UpdateWatchedProcesses();
+                Console.Clear();
+                var res = processCalc.UpdateWatchedProcesses();
+                Console.WriteLine($"{(res ? "All processes was refreshed successully" : "Something went wrong during the refresh")} Refreshing every {processCalc.RefreshTime.Seconds} second{(processCalc.RefreshTime.Seconds> 1 ? "s" : "" )} \n");
                 PrintResults(processCalc.WatchedProcesses);
                 Thread.Sleep(processCalc.RefreshTime);
             }
         }
-        private void PrintResults(Dictionary<string, WachtedProcess> dict)
-        {
-            Console.Clear();
+        private void PrintResults(Dictionary<string, IWatchedProcess> dict)
+        {            
             foreach (var item in dict)
             {
-                Console.WriteLine($"{item.Key} Ram: {item.Value.Memory.MemValue} {item.Value.Memory.Prefix} {(this.showCpu ? $"CPU: {Math.Round(item.Value.CpuPercent, 2)}": "")} {(item.Value.Grouped ? $"Group Size {item.Value.GroupCount}" : "")}");
+                Console.WriteLine($"{item.Key} " +
+                    $"Ram: {item.Value.Memory.MemValue} {item.Value.Memory.Prefix} " +
+                    $"{(_showCpu ? $"CPU: {Math.Round(item.Value.CpuProcessorPercent, 2)}" : "")} " +
+                    $"{(item.Value is IProcessGroup ? $"Group Size {((IProcessGroup)item.Value).GroupMembers.Count()}" : "")}");
             }
-            Console.WriteLine($"{(this.showCpu ? $"\n\nTotal Cpu: {processCalc.TotalCpuUtilization} \nNotice: Cpu Values are work in progress and may never be added correctly to the project" : "" )}");
-            
+            Console.WriteLine($"{(_showCpu ? $"\n\nTotal Cpu: {processCalc.TotalCpuUtilization}": "")}");
         }
     }
 }

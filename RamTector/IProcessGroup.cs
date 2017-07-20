@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace RamTector
 {
-    public interface IProcessGroup
+    public interface IProcessGroup : IWatchedProcess
     {
-        void Update();
+        string GroupName { get;  }
+        List<IProcessGroupMember> GroupMembers { get; set; }
     }
 }

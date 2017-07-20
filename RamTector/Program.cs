@@ -22,7 +22,12 @@ using System.Threading.Tasks;
 
     #4 Sort by name/ram/cpu
 
-    #10 Get github repository. 
+    #5 Add groups with different names, simply change process calculator .addprocess
+
+    HP!#6 Make it so it only updates all processes once and then the groups gather from the pool what they need
+    #7 Make it so that the update happens during an event called update. Make it async. 
+
+    (y)#10 Get github repository. 
   Create a "stats" method that supplies the helper functions with processes.Custom struct or object (can I use the built in process class?)
  */
 namespace RamTector
